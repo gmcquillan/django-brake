@@ -3,7 +3,7 @@ import hashlib
 from django.core.cache import cache
 from django.core.cache.backends.base import BaseCache
 
-from ratelimit.backends import BaseBackend
+from brake.backends import BaseBackend
 
 
 CACHE_PREFIX = 'rl:'

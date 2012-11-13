@@ -3,7 +3,7 @@ from functools import wraps
 
 from django.http import HttpResponseForbidden
 
-from ratelimit.backends.cachebe import CacheBackend
+from brake.backends.cachebe import CacheBackend
 
 
 def _method_match(request, method=None):

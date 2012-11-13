@@ -126,7 +126,7 @@ and override.
 
 ::
 
-    from brake import cachebe
+    from brake.backends import cachebe
 
     MyBrake(cachebe.CacheBackend):
 
