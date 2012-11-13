@@ -175,12 +175,12 @@ Acknowledgements
 ================
 
 Thanks to James Socol (`jsocol`_) on Github. A vast majority of the work on
-this project is his (django-ratelimt_).
+this project is his (django-ratelimit_).
 
 Also thanks to `Simon Willison`_'s ratelimitcache_, on which Jsocol's
 version of this library is largly based.
 
 .. _jsocol: http://github.com/jsocol
-.. _Django Ratelimit: https://github.com/jsocol/django-ratelimit
+.. _django-ratelimit: https://github.com/jsocol/django-ratelimit
 .. _Simon Willison: http://simonwillison.net/
 .. _ratelimitcache: https://github.com/simonw/ratelimitcache
