@@ -125,6 +125,7 @@ to implement Django Brake. You do so with a simple bit of Inheritence
 and override.
 
 ::
+
     from brake import cachebe
 
     MyBrake(cachebe.CacheBackend):
@@ -153,6 +154,7 @@ The cache key structure from *one* bad login attempt from our example
 above would look something like this:
 
 ::
+
     # The form value derived counters:
     rl:func:<function_name>:period:<60>:field:<username>:<sha1 of username>
     rl:func:<function_name>:period:<3600>:field:<username>:<sha1 of username>
