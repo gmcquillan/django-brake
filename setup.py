@@ -3,13 +3,13 @@ from setuptools import setup, find_packages
 from ratelimit import VERSION
 
 setup(
-    name='django-ratelimit',
+    name='django-brake',
     version='.'.join(map(str, VERSION)),
     description='Cache-based rate-limiting for Django.',
     long_description=open('README.rst').read(),
-    author='James Socol',
-    author_email='james@mozilla.com',
-    url='http://github.com/jsocol/django-ratelimit',
+    author='James Socol, Gavin McQuillan',
+    author_email='james@mozilla.com, gavin@urbanairship.com',
+    url='http://github.com/gmcquillan/django-brake',
     license='BSD',
     packages=find_packages(),
     include_package_data=True,
