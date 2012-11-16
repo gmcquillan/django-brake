@@ -1,6 +1,6 @@
 from setuptools import setup, find_packages
 
-from ratelimit import VERSION
+from brake import VERSION
 
 setup(
     name='django-brake',
