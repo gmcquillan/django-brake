@@ -10,16 +10,17 @@ request can be annotated with a ``limited`` attribute, allowing you to take
 another action like adding a captcha to a form.
 
 This is a fork of Django Ratelimit, to support:
-- Django 1.3 and above
-- Multiple buckets (e.g. separate endpoints)
-- Allow for multiple time thresholds (periods) per bucket.
+
+: Django 1.3 and above :
+: Multiple buckets (e.g. separate endpoints) :
+: Allow for multiple time thresholds (periods) per bucket :
 
 The intention is to remain API compliant with Django Ratelimit.
 
 Using Django Brake
 ==================
 
-``from brake.decorators import brake`` is the biggest thing you need to
+``from brake.decorators import ratelimit`` is the biggest thing you need to
 do. The ``@ratelimit`` decorator provides several optional arguments with
 sensible defaults (in *italics*).
 
