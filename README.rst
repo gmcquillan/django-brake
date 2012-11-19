@@ -11,9 +11,9 @@ another action like adding a captcha to a form.
 
 This is a fork of Django Ratelimit, to support:
 
-: Django 1.3 and above :
-: Multiple buckets (e.g. separate endpoints) :
-: Allow for multiple time thresholds (periods) per bucket :
+- Django 1.3 and above
+- Multiple buckets (e.g. separate endpoints)
+- Allow for multiple time thresholds (periods) per bucket
 
 The intention is to remain API compliant with Django Ratelimit.
 
