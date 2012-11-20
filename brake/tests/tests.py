@@ -1,9 +1,7 @@
-import unittest
-from unittest import TestCase
-#from mox import MoxTestBase
 
 from django.core.cache import cache
 from django.test.client import Client
+from django.utils import unittest
 
 from brake.decorators import ratelimit
 
@@ -16,7 +14,7 @@ class RateLimitError(Exception):
     pass
 
 
-class RateLimitTestCase(TestCase):
+class RateLimitTestCase(unittest.TestCase):
     """Adds assertFailsLogin and other helper methods."""
 
     @classmethod
@@ -25,7 +23,7 @@ class RateLimitTestCase(TestCase):
         # Add any test function names here to get them automatically
         # populated in cache.
         cls.FUNCTIONS = (
-            'fake_view',
+            'ratelimit_view',
         )
 
         cls.PERIODS = (60, 3600, 86400)
@@ -127,6 +125,3 @@ class TestRatelimiting(RateLimitTestCase):
         # successfully login now.
         self.assertTrue(self.client.post(good_payload))
 
-
-if __name__ == '__main__':
-    unittest.main()
