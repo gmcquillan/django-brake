@@ -1,5 +1,5 @@
 DATABASES = {'default':{
-    'NAME':'project.db',
+    'NAME':':memory:',
     'ENGINE':'django.db.backends.sqlite3'
 }}
 
@@ -15,8 +15,7 @@ INSTALLED_APPS = (
 # This is where our ratelimiting information is stored.
 CACHES = {
     'default': {
-        'BACKEND': 'django.core.cache.backends.memcached.MemcachedCache',
-        'LOCATION': '127.0.0.1:11211',
+        'BACKEND': 'django.core.cache.backends.dummy.DummyCache',
     }
 }
 
@@ -28,5 +27,13 @@ SECRET_KEY = 'HAHAHA ratelimits!'
 
 # turn this file into a pseudo-urls.py.
 from django.conf.urls.defaults import *
+from brake.tests import FakeDjangoApp
 
-urlpatterns = patterns('')
+urlpatterns = patterns(
+    '',
+    url(
+        r'^fake_login/$',
+        FakeDjangoApp.fake_login,
+        name='fake_login'
+    ),
+)

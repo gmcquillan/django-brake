@@ -1,6 +1,4 @@
-
 from django.core.cache import cache
-from django.test.client import Client
 from django.utils import unittest
 
 from brake.decorators import ratelimit
@@ -12,6 +10,24 @@ class MockRLKeys(object):
 
 class RateLimitError(Exception):
     pass
+
+
+class FakeRequest(object):
+    """A simple request stub."""
+    method = 'POST'
+
+
+class FakeClient(object):
+    """An extremely light-weight test client."""
+
+    def post(self, view_func, data):
+        request = FakeRequest()
+        if callable(view_func):
+            request.POST = data
+
+            return view_func(request)
+
+        return request
 
 
 class RateLimitTestCase(unittest.TestCase):
@@ -77,7 +93,8 @@ class RateLimitTestCase(unittest.TestCase):
 
     def setUp(self):
         super(RateLimitTestCase, self).setUp()
-        self.client = Client()
+        self.client = FakeClient()
+        self.app = FakeDjangoApp()
         # We want fresh cache for ratelimit testing
         cache.clear()
 
@@ -120,8 +137,14 @@ class TestRatelimiting(RateLimitTestCase):
         bad_payload = {'username': 'user'}
         good_payload = {'username': 'user', 'password': 'correct'}
 
-        self.assertFalse(self.client.post(bad_payload))
+        #TODO(gavin): fix the client post and login so that we can call them.
+        self.assertFalse(
+            self.client.post(self.app.fake_login, bad_payload)
+        )
         # We haven't gone over any threshold yet, so we should be able to
         # successfully login now.
-        self.assertTrue(self.client.post(good_payload))
+        good_response = self._parse_response(
+            self.client.post(FakeDjangoApp.fake_login, good_payload)
+        )
+        self.assertTrue(good_response)
 
