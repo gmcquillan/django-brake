@@ -109,6 +109,22 @@ Examples
                 # Login information was not correct.
                 ratelimit_login(request)
 
+    # If you're interested in which endpoints failed, and what the
+    # counts were:
+
+    @ratelimit(field='username', method='POST', rate='1/m')
+    def login(request):
+        # Limits is a dict that looks like this:
+        # {'period': 60, 'field': 'username', 'count', 1}
+        # This can give you more insight into how to deal with
+        # the ratelimiting issue.
+        limits =  getattr(request, 'limits', {})
+
+        if limits:
+            return http.HttpResponseRedirect(urlresolvers.reverse(
+                'auth_login'
+            ))
+
 
 Implementation Details:
 =======================
@@ -171,6 +187,22 @@ If *any* of these thresholds are passed, then the view will 403. This is
 a huge improvement in terms of usablity and security of many existing
 ratelimiting applications.
 
+
+Testing
+=======
+
+To run the test you need to simply run:
+
+::
+
+    virtualenv django-brake
+    cd django-brake
+    . bin/activate
+    python setup.py develop
+    ./test.sh
+
+There's no slick test runner since we're trying not to fully integrate
+with Django. See ``brake/tests/tests.py`` for more code examples.
 
 Acknowledgements
 ================

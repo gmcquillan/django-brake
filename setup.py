@@ -16,7 +16,7 @@ setup(
     package_data = { '': ['README.rst'] },
     install_requires=[
         'django',
-        'mox',
+        'python-memcached',
     ],
     classifiers=[
         'Development Status :: 4 - Beta',
