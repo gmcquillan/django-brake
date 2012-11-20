@@ -57,9 +57,14 @@ class CacheBackend(BaseBackend):
             counters[key] += 1
         cache.set_many(counters, timeout=period)
 
+
     def limit(self, func_name, request,
             ip=True, field=None, count=5, period=None):
         counters = cache.get_many(
             self._keys(func_name, request, ip, field, period)
         )
-        return any((v > count) for v in counters.values())
+
+        return [
+            {'period': period, 'field': field, 'count': v}
+            for v in counters.values() if v > count
+        ]

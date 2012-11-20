@@ -45,11 +45,19 @@ def ratelimit(ip=True, block=False, method=None, field=None, rate='5/m'):
         def _wrapped(request, *args, **kw):
             if _method_match(request, method):
                 _backend.count(func_name, request, ip, field, period)
-                if _backend.limit(
-                        func_name, request, ip, field, count, period):
+                limits = _backend.limit(
+                    func_name, request, ip, field, count, period
+                )
+                if limits:
                     if block:
+
                         return HttpResponseForbidden()
+
                     request.limited = True
+                    request.limits = limits
+
             return fn(request, *args, **kw)
+
         return _wrapped
+
     return decorator

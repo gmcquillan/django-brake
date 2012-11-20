@@ -13,11 +13,8 @@ INSTALLED_APPS = (
 
 
 # This is where our ratelimiting information is stored.
-CACHES = {
-    'default': {
-        'BACKEND': 'django.core.cache.backends.dummy.DummyCache',
-    }
-}
+# Unfortunately, the DummyCache doesn't work for our purposes.
+CACHE_BACKEND = 'memcached://127.0.0.1:11211/'
 
 # point to ourselves as the root urlconf, define no patterns (see below)
 ROOT_URLCONF = 'test_settings'
@@ -27,13 +24,5 @@ SECRET_KEY = 'HAHAHA ratelimits!'
 
 # turn this file into a pseudo-urls.py.
 from django.conf.urls.defaults import *
-from brake.tests import FakeDjangoApp
 
-urlpatterns = patterns(
-    '',
-    url(
-        r'^fake_login/$',
-        FakeDjangoApp.fake_login,
-        name='fake_login'
-    ),
-)
+urlpatterns = patterns('',)
