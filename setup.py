@@ -13,7 +13,7 @@ setup(
     license='BSD',
     packages=find_packages(),
     include_package_data=True,
-    package_data = { '': ['README.rst', 'CONTRIBUTORS'] },
+    package_data = { '': ['README.rst'] },
     install_requires=[
         'django',
     ],
