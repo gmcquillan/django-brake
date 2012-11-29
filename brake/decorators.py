@@ -1,10 +1,12 @@
 import re
 from functools import wraps
 
-from django.http import HttpResponseForbidden
+from django.http import HttpResponse
 
 from brake.backends.cachebe import CacheBackend
 
+class HttpResponseTooManyRequests(HttpResponse):
+    status_code = 429
 
 def _method_match(request, method=None):
     if method is None:
@@ -51,7 +53,7 @@ def ratelimit(ip=True, block=False, method=None, field=None, rate='5/m'):
                 if limits:
                     if block:
 
-                        return HttpResponseForbidden()
+                        return HttpResponseTooManyRequests()
 
                     request.limited = True
                     request.limits = limits
