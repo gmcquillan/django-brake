@@ -18,8 +18,6 @@ CACHES = {
         'BACKEND': 'django.core.cache.backends.locmem.LocMemCache'
     }
 }
-# Might be good to also test against real memcached.
-#CACHE_BACKEND = 'memcached://127.0.0.1:11211/'
 
 # point to ourselves as the root urlconf, define no patterns (see below)
 ROOT_URLCONF = 'test_settings'
