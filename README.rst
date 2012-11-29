@@ -147,9 +147,12 @@ and override.
     from brake.backends import cachebe
 
     MyBrake(cachebe.CacheBackend):
-
-    def get_ip(request):
-        return request.META.get('HTTP_TRUE_CLIENT_IP', 'HOST_ADDR')
+        def get_ip(request):
+            """Return Akamai's True Client IP from request, if available."""
+            return request.META.get(
+                'HTTP_TRUE_CLIENT_IP',
+                request.META.get('HOST_ADDR')
+            )
 
 
 Internals
