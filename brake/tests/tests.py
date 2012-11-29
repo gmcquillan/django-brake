@@ -17,12 +17,16 @@ class FakeRequest(object):
     method = 'POST'
     META = {'REMOTE_ADDR': '127.0.0.1'}
 
+    def __init__(self, headers=None):
+        if headers:
+            self.META.update(headers)
+
 
 class FakeClient(object):
     """An extremely light-weight test client."""
 
-    def post(self, view_func, data):
-        request = FakeRequest()
+    def post(self, view_func, data, headers=None):
+        request = FakeRequest(headers)
         if callable(view_func):
             request.POST = data
 
@@ -224,3 +228,18 @@ class TestRateLimiting(RateLimitTestCase):
         # We will not be limited because this doesn't put us over any threshold.
         self.assertTrue(self.client.post(fake_login, self.good_payload))
 
+    def test_overridden_get_ip_works(self):
+        """Test that our MyBrake Class defined in test_settings works as expected."""
+        cache.set(self.KEYS.fake_login_ip_60, 5)
+        # Should trigger a ratelimit, but only from the HTTP_TRUE_CLIENT_IP
+        # REMOTE_ADDR (the default) isn't in our cache at all.
+        self.assertRaises(
+            RateLimitError,
+            self.client.post,
+            fake_login,
+            self.good_payload,
+            headers={
+                'HTTP_TRUE_CLIENT_IP': '127.0.0.1',
+                'REMOTE_ADDR': '1.2.3.4'
+            }
+        )

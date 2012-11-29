@@ -144,15 +144,21 @@ and override.
 
 ::
 
+    # In its own module, or in your view module; however you like:
+
     from brake.backends import cachebe
 
-    MyBrake(cachebe.CacheBackend):
-        def get_ip(request):
-            """Return Akamai's True Client IP from request, if available."""
+    class MyBrake(cachebe.CacheBackend):
+        def get_ip(self, request):
             return request.META.get(
                 'HTTP_TRUE_CLIENT_IP',
-                request.META.get('HOST_ADDR')
-            )
+                request.META.get('REMOTE_ADDR')
+        )
+
+    # Now in your settings.py:
+
+    RATELIMIT_CACHE_BACKEND = MyBrake
+
 
 
 Internals

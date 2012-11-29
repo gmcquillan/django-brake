@@ -1,6 +1,7 @@
 import re
 from functools import wraps
 
+from django.conf import settings
 from django.http import HttpResponse
 
 from brake.backends.cachebe import CacheBackend
@@ -35,7 +36,9 @@ def _split_rate(rate):
     return count, time
 
 
-_backend = CacheBackend()
+# Allows you to override the CacheBackend in your settings.py
+_backend_class = getattr(settings, 'RATELIMIT_CACHE_BACKEND', CacheBackend)
+_backend = _backend_class()
 
 
 def ratelimit(ip=True, block=False, method=None, field=None, rate='5/m'):
