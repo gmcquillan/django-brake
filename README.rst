@@ -2,6 +2,9 @@
 Django Brake
 ================
 
+.. image:: https://secure.travis-ci.org/gmcquillan/django-brake.png?branch=master
+    :target: http://travis-ci.org/gmcquillan/django-brake
+
 Django Brake provides a decorator to rate-limit views. Limiting can be
 based on IP address or a field in the request--either a GET or POST variable.
 
