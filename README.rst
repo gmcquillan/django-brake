@@ -160,7 +160,11 @@ and override.
 
     # Now in your settings.py:
 
-    RATELIMIT_CACHE_BACKEND = MyBrake
+    RATELIMIT_CACHE_BACKEND = 'path.to.module.MyBrake'
+
+
+.. note:: RATELIMIT_CACHE_BACKEND is now a string of the path to a
+    class. The class itself should be the last in the chain.
 
 
 

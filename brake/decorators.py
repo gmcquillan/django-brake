@@ -4,8 +4,6 @@ from functools import wraps
 from django.conf import settings
 from django.http import HttpResponse
 
-from brake.backends.cachebe import CacheBackend
-
 class HttpResponseTooManyRequests(HttpResponse):
     status_code = 429
 
@@ -36,9 +34,21 @@ def _split_rate(rate):
     return count, time
 
 
+def get_class_by_path(path):
+    mod = __import__('.'.join(path.split('.')[:-1]))
+    components = path.split('.')
+    for comp in components[1:]:
+        mod = getattr(mod, comp)
+
+    return mod
+
 # Allows you to override the CacheBackend in your settings.py
-_backend_class = getattr(settings, 'RATELIMIT_CACHE_BACKEND', CacheBackend)
-_backend = _backend_class()
+_backend_class = getattr(
+    settings,
+    'RATELIMIT_CACHE_BACKEND',
+    'brake.backends.cachebe.CacheBackend'
+)
+_backend = get_class_by_path(_backend_class)()
 
 
 def ratelimit(ip=True, block=False, method=None, field=None, rate='5/m'):

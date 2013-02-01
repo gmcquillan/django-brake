@@ -16,6 +16,7 @@ setup(
     package_data = { '': ['README.rst'] },
     install_requires=[
         'django',
+        'nose',
     ],
     classifiers=[
         'Development Status :: 4 - Beta',

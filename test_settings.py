@@ -19,16 +19,7 @@ CACHES = {
     }
 }
 
-from brake.backends import cachebe
-
-class MyBrake(cachebe.CacheBackend):
-    def get_ip(self, request):
-        return request.META.get(
-            'HTTP_TRUE_CLIENT_IP',
-            request.META.get('REMOTE_ADDR')
-        )
-
-RATELIMIT_CACHE_BACKEND = MyBrake
+RATELIMIT_CACHE_BACKEND = 'brake.tests.custom_backend.MyBrake'
 
 # point to ourselves as the root urlconf, define no patterns (see below)
 ROOT_URLCONF = 'test_settings'
