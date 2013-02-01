@@ -40,7 +40,7 @@ class CacheBackend(BaseBackend):
                 # Convert value to hexdigest as cache backend doesn't allow
                 # certain characters
                 if val:
-                    val = hashlib.sha1(val).hexdigest()
+                    val = hashlib.sha1(val.encode('utf-8')).hexdigest()
                     keys.append('func:%s:%s%s:field:%s:%s' % (
                         func_name, PERIOD_PREFIX, period, f, val
                     ))

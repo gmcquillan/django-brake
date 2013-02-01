@@ -53,7 +53,7 @@ class RateLimitTestCase(unittest.TestCase):
         # Keys using this template are for form field-specific counters.
         cls.FIELD_TEMPLATE = ':1:rl:func:%s:period:%s:field:username:%s'
         # Sha1 hash of 'user' used in rate limit related tests:
-        cls.USERNAME_SHA1_DIGEST = '12dea96fec20593566ab75692c9949596833adc9'
+        cls.USERNAME_SHA1_DIGEST = 'efe049ccead779e455e93893366c119d44ddd8b5'
         cls.KEYS = MockRLKeys()
         # Create all possible combinations of IP and user_hash memcached keys.
         for period in cls.PERIODS:
@@ -133,8 +133,8 @@ class TestRateLimiting(RateLimitTestCase):
 
     def setUp(self):
         super(TestRateLimiting, self).setUp()
-        self.good_payload = {'username': 'user', 'password': 'correct'}
-        self.bad_payload = {'username': 'user'}
+        self.good_payload = {'username': u'us\xe9r', 'password': 'correct'}
+        self.bad_payload = {'username': u'us\xe9r'}
 
     def test_allow_some_failures(self):
         """Test to make sure that short-term thresholds ignore older ones."""
