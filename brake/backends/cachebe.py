@@ -50,6 +50,7 @@ class CacheBackend(BaseBackend):
         ]
 
     def count(self, func_name, request, ip=True, field=None, period=60):
+        """Increment counters for all relevant cache_keys given a request."""
         counters = dict((key, 0) for key in self._keys(
             func_name, request, ip, field, period))
         counters.update(cache.get_many(counters.keys()))
@@ -57,14 +58,27 @@ class CacheBackend(BaseBackend):
             counters[key] += 1
         cache.set_many(counters, timeout=period)
 
-
     def limit(self, func_name, request,
             ip=True, field=None, count=5, period=None):
+        """Return limit data about any keys relevant for requst."""
         counters = cache.get_many(
             self._keys(func_name, request, ip, field, period)
         )
 
-        return [
-            {'period': period, 'field': field, 'count': v}
-            for v in counters.values() if v > count
-        ]
+        limits = []
+        for counter in counters:
+            ratelimited_by = 'field'
+            if ':ip:' in counter:
+                ratelimited_by = 'ip'
+
+            if counters[counter] > count:
+                limits.append({
+                    'ratelimited_by': ratelimited_by,
+                    'period': period,
+                    'field': field,
+                    'count': counters[counter],
+                    'cache_key': counter,
+                    'ip': self.get_ip(request)
+                })
+
+        return limits
