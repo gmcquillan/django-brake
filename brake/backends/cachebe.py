@@ -51,7 +51,7 @@ class CacheBackend(BaseBackend):
 
     def count(self, func_name, request, ip=True, field=None, period=60):
         """Increment counters for all relevant cache_keys given a request."""
-        counters = dict((key, 0) for key in self._keys(
+        counters = dict((key, 1) for key in self._keys(
             func_name, request, ip, field, period))
         counters.update(cache.get_many(counters.keys()))
         for key in counters:
