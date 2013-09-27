@@ -72,7 +72,8 @@ def ratelimit(ip=True, block=False, method=None, field=None, rate='5/m', increme
             if response is None:
                 response = fn(request, *args, **kw)
 
-            if increment is None or (callable(increment) and increment(request, response)):
+            if _method_match(request, method) and \
+                    (increment is None or (callable(increment) and increment(request, response))):
                 _backend.count(func_name, request, ip, field, period)
 
             return response
