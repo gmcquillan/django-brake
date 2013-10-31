@@ -85,33 +85,48 @@ Examples
     ## Example Login Code to *only* block login failures
     ##
 
-    @ratelimit(field='username', method='POST', rate='5/m')
-    @ratelimit(field='username', method='POST', rate='10/h')
-    @ratelimit(field='username', method='POST', rate='20/d')
-    def ratelimit_login(request):
-        """Increment cache counters, 403 if over limit."""
+    def login(request):
+        """Just a regular django login flow."""
+        from brake import utils as brake_utils
+        # minute, hour, day periods.
+        periods = (60, 60 * 60, 24 * 60 * 60,)
+        # 'login' is whatever your func.__name__ attribute would be
+        # for the function that is decorated
+        limits = brake_utils.get_limits(
+            request, 'login', 'username', self.PERIODS
+        )
 
-        was_limited = getattr(request, 'limited', False)
-        if was_limited:
+        # Check limits before we even see if the form is valid.
+        # This way, even if the attacker stumbles on the
+        # correct passphrase, they're locked out.
+
+        if limits:
             request.flash['error'] = 'You have been ratelimited'
-            # Log the error, etc.
-
             return http.HttpResponseRedirect(urlresolvers.reverse(
                 'auth_login'
             ))
 
-
-
-    def login(request):
-        """Just a regular django login flow."""
         form = forms.AuthenticationForm()
         if form.method == 'POST':
             form = forms.AuthenticationForm(data=request.POST):
-                if form.is_valid()
-                    # Log in user and redirect to next page.
-
                 # Login information was not correct.
-                ratelimit_login(request)
+                if form.is_valid():
+                    # Proceed with login process, and redirect to next page.
+
+                # If our form is invalid, we increment counters manually
+                brake_utils.inc_counts(
+                    request,
+                    'login',
+                    'username', # Username value.
+                    periods
+                )
+                # Return to login page
+                # Optionally, you can pass in the form context
+                return http.HttpResponseRedirect(urlresolvers.reverse(
+                    'auth_login'
+                ))
+
+
 
     # If you're interested in which endpoints failed, and what the
     # counts were:
