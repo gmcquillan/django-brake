@@ -165,9 +165,9 @@ class TestRateLimiting(RateLimitTestCase):
 
     def test_ratelimit_by_ip_one_minute(self):
         """Block requests after 1 minute limit is exceeded."""
-        # Set our counter as just below the threshold for our lowest period
+        # Set our counter as the threshold for our lowest period
         # We're only setting the counter for this remote IP
-        cache.set(self.KEYS.fake_login_ip_60, 4)
+        cache.set(self.KEYS.fake_login_ip_60, 5)
         # Ensure that correct logins still go through.
         self.assertFalse(self.client.post(fake_login, self.bad_payload))
         # Now this most recent login has exceeded the threshold, we should get
@@ -182,7 +182,7 @@ class TestRateLimiting(RateLimitTestCase):
 
     def test_ratelimit_by_field_one_minute(self):
         """Block requests after one minute limit is exceeded for a username."""
-        cache.set(self.KEYS.fake_login_field_60, 4)
+        cache.set(self.KEYS.fake_login_field_60, 5)
         self.assertFalse(self.client.post(fake_login, self.bad_payload))
         self.assertRaises(
             RateLimitError, self.client.post, fake_login, self.bad_payload
@@ -190,7 +190,7 @@ class TestRateLimiting(RateLimitTestCase):
 
     def test_ratelimit_one_hour(self):
         """Block requests after 1 hour limit is exceeded."""
-        cache.set(self.KEYS.fake_login_ip_3600, 9)
+        cache.set(self.KEYS.fake_login_ip_3600, 10)
         self.assertFalse(self.client.post(fake_login, self.bad_payload))
         self.assertRaises(
             RateLimitError, self.client.post, fake_login, self.bad_payload
@@ -198,7 +198,7 @@ class TestRateLimiting(RateLimitTestCase):
 
     def test_ratelimit_by_field_one_hour(self):
         """Block requests after 1 hour limit is exceeded for a username."""
-        cache.set(self.KEYS.fake_login_field_3600, 9)
+        cache.set(self.KEYS.fake_login_field_3600, 10)
         self.assertFalse(self.client.post(fake_login, self.bad_payload))
         self.assertRaises(
             RateLimitError, self.client.post, fake_login, self.bad_payload
@@ -206,7 +206,7 @@ class TestRateLimiting(RateLimitTestCase):
 
     def test_ratelimit_one_day(self):
         """Block requests after 1 hour limit is exceeded."""
-        cache.set(self.KEYS.fake_login_ip_86400, 19)
+        cache.set(self.KEYS.fake_login_ip_86400, 20)
         self.assertFalse(self.client.post(fake_login, self.bad_payload))
         self.assertRaises(
             RateLimitError, self.client.post, fake_login, self.bad_payload
@@ -214,7 +214,7 @@ class TestRateLimiting(RateLimitTestCase):
 
     def test_ratelimit_by_field_one_day(self):
         """Block requests after 1 hour limit is exceeded for a username."""
-        cache.set(self.KEYS.fake_login_field_86400, 19)
+        cache.set(self.KEYS.fake_login_field_86400, 20)
         self.assertFalse(self.client.post(fake_login, self.bad_payload))
         self.assertRaises(
             RateLimitError, self.client.post, fake_login, self.bad_payload
@@ -230,7 +230,7 @@ class TestRateLimiting(RateLimitTestCase):
 
     def test_overridden_get_ip_works(self):
         """Test that our MyBrake Class defined in test_settings works as expected."""
-        cache.set(self.KEYS.fake_login_ip_60, 5)
+        cache.set(self.KEYS.fake_login_ip_60, 6)
         # Should trigger a ratelimit, but only from the HTTP_TRUE_CLIENT_IP
         # REMOTE_ADDR (the default) isn't in our cache at all.
         self.assertRaises(

@@ -51,27 +51,34 @@ _backend_class = getattr(
 _backend = get_class_by_path(_backend_class)()
 
 
-def ratelimit(ip=True, block=False, method=None, field=None, rate='5/m'):
+def ratelimit(ip=True, block=False, method=None, field=None, rate='5/m', increment=None):
     def decorator(fn):
         func_name = fn.__name__
         count, period = _split_rate(rate)
 
         @wraps(fn)
         def _wrapped(request, *args, **kw):
+            response = None
             if _method_match(request, method):
-                _backend.count(func_name, request, ip, field, period)
                 limits = _backend.limit(
                     func_name, request, ip, field, count, period
                 )
                 if limits:
                     if block:
-
-                        return HttpResponseTooManyRequests()
-
+                        response = HttpResponseTooManyRequests()
                     request.limited = True
                     request.limits = limits
 
-            return fn(request, *args, **kw)
+            if response is None:
+                # If the response isn't HttpResponseTooManyRequests already, run
+                # the actual function to get the result.
+                response = fn(request, *args, **kw)
+
+            if _method_match(request, method) and \
+                    (increment is None or (callable(increment) and increment(request, response))):
+                _backend.count(func_name, request, ip, field, period)
+
+            return response
 
         return _wrapped
 
