@@ -35,9 +35,14 @@ sensible defaults (in *italics*).
 :``method``:
     Which HTTP method(s) to rate-limit. May be a string or a list. *all*
 :``field``:
-    Which HTTP field(s) to use to rate-limit. May be a string or a list. *none*
+    Which HTTP field(s) to use to rate-limit. May be a string or a list. *None*
 :``rate``:
     The number of requests per unit time allowed. *5/m*
+:``increment``:
+    A callable that will accept the `request` and `response` as arguments and,
+    when called, will return True or False. If it returns False, the current
+    request is not counted against the limit. Useful for only counting invalid
+    login attempts against the limit, for example, and not valid ones.  *None*
 
 
 Examples
@@ -63,6 +68,16 @@ Examples
         # request method.
         was_limited = getattr(request, 'limited', False)
         return HttpResponse()
+
+    @ratelimit(increment=lambda req, resp: resp.count)
+    def login(request):
+        resp = HttpResponseRedirect()
+        if login_is_correct:
+            # Do not count correct logins against the limit.
+            resp.count = False
+        else:
+            resp.count = True
+        return resp
 
     @ratelimit(method='POST')
     def login(request):

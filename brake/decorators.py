@@ -70,6 +70,8 @@ def ratelimit(ip=True, block=False, method=None, field=None, rate='5/m', increme
                     request.limits = limits
 
             if response is None:
+                # If the response isn't HttpResponseTooManyRequests already, run
+                # the actual function to get the result.
                 response = fn(request, *args, **kw)
 
             if _method_match(request, method) and \
