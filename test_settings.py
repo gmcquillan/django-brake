@@ -20,6 +20,7 @@ CACHES = {
 }
 
 RATELIMIT_CACHE_BACKEND = 'brake.tests.custom_backend.MyBrake'
+RATELIMIT_STATUS_CODE = 429 # The HTTP Response code to return.
 
 # point to ourselves as the root urlconf, define no patterns (see below)
 ROOT_URLCONF = 'test_settings'
@@ -28,6 +29,6 @@ ROOT_URLCONF = 'test_settings'
 SECRET_KEY = 'HAHAHA ratelimits!'
 
 # turn this file into a pseudo-urls.py.
-from django.conf.urls.defaults import *
+from django.conf.urls import patterns
 
 urlpatterns = patterns('',)
