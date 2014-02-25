@@ -197,6 +197,10 @@ and override.
     class. The class itself should be the last in the chain.
 
 
+.. note:: RATELIMIT_STATUS_CODE is another setting you might set if you'd
+    like the decorator to return something other than ``403`` if ``block=True``.
+
+
 
 Internals
 ---------
