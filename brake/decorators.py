@@ -81,7 +81,7 @@ def ratelimit(
                     (increment is None or (callable(increment) and increment(
                         request, response
                     ))):
-                _backend.count(func_name, request, ip, field, period)
+                    _backend.count(func_name, request, ip, field, period)
 
             return response
 
