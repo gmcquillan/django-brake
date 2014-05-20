@@ -18,6 +18,7 @@ This is a fork of Django Ratelimit, to support:
 - Multiple buckets (e.g. separate endpoints)
 - Allow for multiple time thresholds (periods) per bucket
 - Analyze which functions were limited, and what their counts were.
+- allow rate limiting of distinct request paths separately, even if they map to the same view
 
 The intention is to remain API compliant with Django Ratelimit.
 
@@ -30,6 +31,9 @@ sensible defaults (in *italics*).
 
 :``ip``:
     Whether to rate-limit based on the IP. *True*
+:``use_request_path``:
+    Whether to use ``request.path`` instead of the view function name when constructing the ratelimit cache keys.
+	Useful if many URLs map to the same view and you want to divide them into separate buckets.  *False*
 :``block``:
     Whether to block the request instead of annotating. *False*
 :``method``:
