@@ -138,7 +138,6 @@ def fake_login_no_exception(request):
     """Fake view allows us to examine the response code."""
     return HttpResponse()
 
-@ratelimit(method='POST', use_request_path=True, rate='5/m', block=True)
 def fake_login_use_request_path(request):
     """Used to test use_request_path=True"""
     return HttpResponse()
@@ -268,5 +267,13 @@ class TestRateLimiting(RateLimitTestCase):
     def test_use_request_path(self):
         """Test use_request_path=True = use request.path instead of view function name in cache key"""
         cache.set(self.KEYS.fake_login_path_ip_60, 6)
-        result = self.client.post(fake_login_use_request_path, self.bad_payload)
+        rl = ratelimit(method='POST', use_request_path=True, rate='5/m', block=True)
+        result = self.client.post(rl(fake_login_use_request_path), self.bad_payload)
         self.assertEqual(result.status_code, 429)
+
+    def test_dont_use_request_path(self):
+        """Test use_request_path=False for the same view function above"""
+        cache.set(self.KEYS.fake_login_path_ip_60, 6)
+        rl = ratelimit(method='POST', use_request_path=False, rate='5/m', block=True)
+        result = self.client.post(rl(fake_login_use_request_path), self.bad_payload)
+        self.assertEqual(result.status_code, 200)
