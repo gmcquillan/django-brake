@@ -52,14 +52,17 @@ _backend = get_class_by_path(_backend_class)()
 
 
 def ratelimit(
-    ip=True, block=False, method=None, field=None, rate='5/m', increment=None
+    ip=True, use_request_path=False, block=False, method=None, field=None, rate='5/m', increment=None
 ):
     def decorator(fn):
-        func_name = fn.__name__
         count, period = _split_rate(rate)
 
         @wraps(fn)
         def _wrapped(request, *args, **kw):
+            if use_request_path:
+                func_name = request.path
+            else:
+                func_name = fn.__name__
             response = None
             if _method_match(request, method):
                 limits = _backend.limit(
