@@ -1,4 +1,5 @@
 from django.core.cache import cache
+from django.http import HttpResponse
 from django.utils import unittest
 
 from brake.decorators import ratelimit
@@ -16,6 +17,7 @@ class FakeRequest(object):
     """A simple request stub."""
     method = 'POST'
     META = {'REMOTE_ADDR': '127.0.0.1'}
+    path = 'fake_login_path'
 
     def __init__(self, headers=None):
         if headers:
@@ -45,6 +47,8 @@ class RateLimitTestCase(unittest.TestCase):
         # populated in cache.
         cls.FUNCTIONS = (
             'fake_login',
+            'fake_login_no_exception',
+            'fake_login_path'
         )
 
         cls.PERIODS = (60, 3600, 86400)
@@ -128,6 +132,15 @@ def fake_login(request):
 
     return True
 
+
+@ratelimit(field='username', method='POST', rate='10/m', block=True)
+def fake_login_no_exception(request):
+    """Fake view allows us to examine the response code."""
+    return HttpResponse()
+
+def fake_login_use_request_path(request):
+    """Used to test use_request_path=True"""
+    return HttpResponse()
 
 class TestRateLimiting(RateLimitTestCase):
 
@@ -229,7 +242,7 @@ class TestRateLimiting(RateLimitTestCase):
         self.assertTrue(self.client.post(fake_login, self.good_payload))
 
     def test_overridden_get_ip_works(self):
-        """Test that our MyBrake Class defined in test_settings works as expected."""
+        """Test that our MyBrake Class defined in test_settings works."""
         cache.set(self.KEYS.fake_login_ip_60, 6)
         # Should trigger a ratelimit, but only from the HTTP_TRUE_CLIENT_IP
         # REMOTE_ADDR (the default) isn't in our cache at all.
@@ -243,3 +256,24 @@ class TestRateLimiting(RateLimitTestCase):
                 'REMOTE_ADDR': '1.2.3.4'
             }
         )
+
+    def test_status_code(self):
+        """Test that our custom status code is returned."""
+        cache.set(self.KEYS.fake_login_no_exception_ip_60, 20)
+        result = self.client.post(fake_login_no_exception, self.bad_payload)
+        # The default is 403, if we see 429, then we know our setting worked.
+        self.assertEqual(result.status_code, 429)
+
+    def test_use_request_path(self):
+        """Test use_request_path=True = use request.path instead of view function name in cache key"""
+        cache.set(self.KEYS.fake_login_path_ip_60, 6)
+        rl = ratelimit(method='POST', use_request_path=True, rate='5/m', block=True)
+        result = self.client.post(rl(fake_login_use_request_path), self.bad_payload)
+        self.assertEqual(result.status_code, 429)
+
+    def test_dont_use_request_path(self):
+        """Test use_request_path=False for the same view function above"""
+        cache.set(self.KEYS.fake_login_path_ip_60, 6)
+        rl = ratelimit(method='POST', use_request_path=False, rate='5/m', block=True)
+        result = self.client.post(rl(fake_login_use_request_path), self.bad_payload)
+        self.assertEqual(result.status_code, 200)

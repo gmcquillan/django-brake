@@ -18,6 +18,7 @@ This is a fork of Django Ratelimit, to support:
 - Multiple buckets (e.g. separate endpoints)
 - Allow for multiple time thresholds (periods) per bucket
 - Analyze which functions were limited, and what their counts were.
+- allow rate limiting of distinct request paths separately, even if they map to the same view
 
 The intention is to remain API compliant with Django Ratelimit.
 
@@ -30,6 +31,9 @@ sensible defaults (in *italics*).
 
 :``ip``:
     Whether to rate-limit based on the IP. *True*
+:``use_request_path``:
+    Whether to use ``request.path`` instead of the view function name when constructing the ratelimit cache keys.
+	Useful if many URLs map to the same view and you want to divide them into separate buckets.  *False*
 :``block``:
     Whether to block the request instead of annotating. *False*
 :``method``:
@@ -100,33 +104,48 @@ Examples
     ## Example Login Code to *only* block login failures
     ##
 
-    @ratelimit(field='username', method='POST', rate='5/m')
-    @ratelimit(field='username', method='POST', rate='10/h')
-    @ratelimit(field='username', method='POST', rate='20/d')
-    def ratelimit_login(request):
-        """Increment cache counters, 403 if over limit."""
+    def login(request):
+        """Just a regular django login flow."""
+        from brake import utils as brake_utils
+        # minute, hour, day periods.
+        periods = (60, 60 * 60, 24 * 60 * 60,)
+        # 'login' is whatever your func.__name__ attribute would be
+        # for the function that is decorated
+        limits = brake_utils.get_limits(
+            request, 'login', 'username', self.PERIODS
+        )
 
-        was_limited = getattr(request, 'limited', False)
-        if was_limited:
+        # Check limits before we even see if the form is valid.
+        # This way, even if the attacker stumbles on the
+        # correct passphrase, they're locked out.
+
+        if limits:
             request.flash['error'] = 'You have been ratelimited'
-            # Log the error, etc.
-
             return http.HttpResponseRedirect(urlresolvers.reverse(
                 'auth_login'
             ))
 
-
-
-    def login(request):
-        """Just a regular django login flow."""
         form = forms.AuthenticationForm()
         if form.method == 'POST':
             form = forms.AuthenticationForm(data=request.POST):
-                if form.is_valid()
-                    # Log in user and redirect to next page.
-
                 # Login information was not correct.
-                ratelimit_login(request)
+                if form.is_valid():
+                    # Proceed with login process, and redirect to next page.
+
+                # If our form is invalid, we increment counters manually
+                brake_utils.inc_counts(
+                    request,
+                    'login',
+                    'username', # Username value.
+                    periods
+                )
+                # Return to login page
+                # Optionally, you can pass in the form context
+                return http.HttpResponseRedirect(urlresolvers.reverse(
+                    'auth_login'
+                ))
+
+
 
     # If you're interested in which endpoints failed, and what the
     # counts were:
@@ -180,6 +199,10 @@ and override.
 
 .. note:: RATELIMIT_CACHE_BACKEND is now a string of the path to a
     class. The class itself should be the last in the chain.
+
+
+.. note:: RATELIMIT_STATUS_CODE is another setting you might set if you'd
+    like the decorator to return something other than ``403`` if ``block=True``.
 
 
 
