@@ -79,11 +79,12 @@ def ratelimit(
                 # the actual function to get the result.
                 response = fn(request, *args, **kw)
 
-            if _method_match(request, method) and \
+            if not isinstance(response, HttpResponseTooManyRequests):
+                if _method_match(request, method) and \
                     (increment is None or (callable(increment) and increment(
                         request, response
                     ))):
-                _backend.count(func_name, request, ip, field, period)
+                    _backend.count(func_name, request, ip, field, period)
 
             return response
 
