@@ -1,4 +1,5 @@
 import hashlib
+import time
 
 from django.core.cache import cache
 from django.core.cache.backends.base import BaseCache
@@ -51,12 +52,13 @@ class CacheBackend(BaseBackend):
 
     def count(self, func_name, request, ip=True, field=None, period=60):
         """Increment counters for all relevant cache_keys given a request."""
-        counters = dict((key, 1) for key in self._keys(
+        counters = dict((key, (1, time.time() + period)) for key in self._keys(
             func_name, request, ip, field, period))
         counters.update(cache.get_many(counters.keys()))
-        for key in counters:
-            counters[key] += 1
-        cache.set_many(counters, timeout=period)
+        for key, value in counters.items():
+            count, expiration = value
+            count += 1
+            cache.set(key, (count, expiration), timeout=expiration - time.time())
 
     def limit(self, func_name, request,
             ip=True, field=None, count=5, period=None):
@@ -71,7 +73,7 @@ class CacheBackend(BaseBackend):
             if ':ip:' in counter:
                 ratelimited_by = 'ip'
 
-            if counters[counter] > count:
+            if counters[counter][0] > count:
                 limits.append({
                     'ratelimited_by': ratelimited_by,
                     'period': period,
