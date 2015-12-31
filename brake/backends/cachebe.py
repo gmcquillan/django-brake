@@ -51,12 +51,23 @@ class CacheBackend(BaseBackend):
 
     def count(self, func_name, request, ip=True, field=None, period=60):
         """Increment counters for all relevant cache_keys given a request."""
-        counters = dict((key, 1) for key in self._keys(
-            func_name, request, ip, field, period))
-        counters.update(cache.get_many(counters.keys()))
-        for key in counters:
-            counters[key] += 1
-        cache.set_many(counters, timeout=period)
+        counters_read = cache.get_many(
+            self._keys(func_name, request, ip, field, period))
+
+        for key, value in counters_read.items():
+            #Handle old values.
+            if isinstance(value, tuple):
+                count, _ = value # Futureproofing for expiration values.
+            else:
+                count = value
+
+            count += 1
+
+            # These changes come from:
+            # https://github.com/gmcquillan/django-brake/pull/21
+            # However, to future proof them, we accept the new values, but
+            # continue to write the old-style values as part of an upgrade path.
+            cache.set(key, count, timeout=period)
 
     def limit(self, func_name, request,
             ip=True, field=None, count=5, period=None):
@@ -71,12 +82,15 @@ class CacheBackend(BaseBackend):
             if ':ip:' in counter:
                 ratelimited_by = 'ip'
 
-            if counters[counter] > count:
+            current_count = counters[counter]
+            if isinstance(current_count, tuple):
+                current_count = current_count[0]
+            if current_count > count:
                 limits.append({
                     'ratelimited_by': ratelimited_by,
                     'period': period,
                     'field': field,
-                    'count': counters[counter],
+                    'count': current_count,
                     'cache_key': counter,
                     'ip': self.get_ip(request)
                 })
