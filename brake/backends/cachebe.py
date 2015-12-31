@@ -78,8 +78,8 @@ class CacheBackend(BaseBackend):
             if ':ip:' in counter:
                 ratelimited_by = 'ip'
 
-            current_count = counters["counter"]
-            if isinstance(counters[counter], tuple):
+            current_count = counters[counter]
+            if isinstance(current_count, tuple):
                 current_count = current_count[0]
 
             if current_count > count:
