@@ -1,6 +1,6 @@
+import unittest
 from django.core.cache import cache
 from django.http import HttpResponse
-from django.utils import unittest
 
 from brake.decorators import ratelimit
 
