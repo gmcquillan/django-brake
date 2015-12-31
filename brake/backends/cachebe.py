@@ -56,7 +56,12 @@ class CacheBackend(BaseBackend):
             func_name, request, ip, field, period))
         counters.update(cache.get_many(counters.keys()))
         for key, value in counters.items():
-            count, expiration = value
+            # Handle old values.
+            if isinstance(value, tuple):
+                count, expiration = value
+            else:
+                count = value
+                expiration = time.time()
             count += 1
             cache.set(key, (count, expiration), timeout=expiration - time.time())
 
@@ -73,7 +78,11 @@ class CacheBackend(BaseBackend):
             if ':ip:' in counter:
                 ratelimited_by = 'ip'
 
-            if counters[counter][0] > count:
+            current_count = counters["counter"]
+            if isinstance(counters[counter], tuple):
+                current_count = current_count[0]
+
+            if current_count > count:
                 limits.append({
                     'ratelimited_by': ratelimited_by,
                     'period': period,
