@@ -51,9 +51,9 @@ class CacheBackend(BaseBackend):
 
     def count(self, func_name, request, ip=True, field=None, period=60):
         """Increment counters for all relevant cache_keys given a request."""
-        counters_read = cache.get_many(
-            self._keys(func_name, request, ip, field, period))
-
+        cache_keys = self._keys(func_name, request, ip, field, period)
+        counters = dict((key, 1) for key in cache_keys)
+        counters_read = cache.get_many(cache_keys)
         for key, value in counters_read.items():
             #Handle old values.
             if isinstance(value, tuple):
@@ -67,7 +67,9 @@ class CacheBackend(BaseBackend):
             # https://github.com/gmcquillan/django-brake/pull/21
             # However, to future proof them, we accept the new values, but
             # continue to write the old-style values as part of an upgrade path.
-            cache.set(key, count, timeout=period)
+            counters[key] = count
+
+        cache.set_many(counters, timeout=period)
 
     def limit(self, func_name, request,
             ip=True, field=None, count=5, period=None):

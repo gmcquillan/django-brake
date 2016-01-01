@@ -297,3 +297,25 @@ class TestRateLimiting(RateLimitTestCase):
         self.assertRaises(
             RateLimitError, self.client.post, fake_login, self.bad_payload
         )
+
+    def test_new_counters_are_created(self):
+        """Makes sure that we create counters for keys/buckets.
+
+        This is so we know that we're populating some values for every
+        bucket.
+        """
+        # a bad post
+        self.assertFalse(self.client.post(fake_login, self.bad_payload))
+        # These are the cache keys that are specified by the decorator
+        # for this view.
+        fake_login_cache_keys = [
+                self.KEYS.fake_login_field_60,
+                self.KEYS.fake_login_field_3600,
+                self.KEYS.fake_login_field_86400,
+                self.KEYS.fake_login_ip_60,
+                self.KEYS.fake_login_ip_3600,
+                self.KEYS.fake_login_ip_86400,
+        ]
+        for key in fake_login_cache_keys:
+            self.assertEquals(1, cache.get(key))
+
