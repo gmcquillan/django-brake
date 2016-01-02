@@ -1,3 +1,4 @@
+import time
 import unittest
 from django.core.cache import cache
 from django.http import HttpResponse
@@ -277,3 +278,44 @@ class TestRateLimiting(RateLimitTestCase):
         rl = ratelimit(method='POST', use_request_path=False, rate='5/m', block=True)
         result = self.client.post(rl(fake_login_use_request_path), self.bad_payload)
         self.assertEqual(result.status_code, 200)
+
+    def test_accept_new_expiration_value_write_legacy_value(self):
+        """Make sure we read new version, but write the legacy format.
+
+        This is as necessary use-case for a fault-free upgrade path from
+        legacy to the improved expiration-base values.
+        """
+        # The new value format will be a tuple of the (count, expiration_time).
+        cache.set(self.KEYS.fake_login_field_60, (5, time.time() + 120))
+        # Make another incorrect login attempt
+        self.assertFalse(self.client.post(fake_login, self.bad_payload))
+        # Check that our count was not only incremented,
+        # but is in the legacy format.
+        self.assertEqual(6, cache.get(self.KEYS.fake_login_field_60))
+
+        # Next attempt should be Ratelimited.
+        self.assertRaises(
+            RateLimitError, self.client.post, fake_login, self.bad_payload
+        )
+
+    def test_new_counters_are_created(self):
+        """Makes sure that we create counters for keys/buckets.
+
+        This is so we know that we're populating some values for every
+        bucket.
+        """
+        # a bad post
+        self.assertFalse(self.client.post(fake_login, self.bad_payload))
+        # These are the cache keys that are specified by the decorator
+        # for this view.
+        fake_login_cache_keys = [
+                self.KEYS.fake_login_field_60,
+                self.KEYS.fake_login_field_3600,
+                self.KEYS.fake_login_field_86400,
+                self.KEYS.fake_login_ip_60,
+                self.KEYS.fake_login_ip_3600,
+                self.KEYS.fake_login_ip_86400,
+        ]
+        for key in fake_login_cache_keys:
+            self.assertEquals(1, cache.get(key))
+
