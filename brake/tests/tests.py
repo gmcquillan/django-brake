@@ -1,8 +1,8 @@
 import time
 
+import unittest
 from django.core.cache import cache
 from django.http import HttpResponse
-from django.utils import unittest
 
 from brake.decorators import ratelimit
 
@@ -279,3 +279,25 @@ class TestRateLimiting(RateLimitTestCase):
         rl = ratelimit(method='POST', use_request_path=False, rate='5/m', block=True)
         result = self.client.post(rl(fake_login_use_request_path), self.bad_payload)
         self.assertEqual(result.status_code, 200)
+
+    def test_new_counters_are_created(self):
+        """Makes sure that we create counters for keys/buckets.
+
+        This is so we know that we're populating some values for every
+        bucket.
+        """
+        # a bad post
+        self.assertFalse(self.client.post(fake_login, self.bad_payload))
+        # These are the cache keys that are specified by the decorator
+        # for this view.
+        fake_login_cache_keys = [
+                self.KEYS.fake_login_field_60,
+                self.KEYS.fake_login_field_3600,
+                self.KEYS.fake_login_field_86400,
+                self.KEYS.fake_login_ip_60,
+                self.KEYS.fake_login_ip_3600,
+                self.KEYS.fake_login_ip_86400,
+        ]
+        for key in fake_login_cache_keys:
+            self.assertTrue(cache.get(key) > 1)
+

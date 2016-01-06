@@ -87,7 +87,7 @@ class CacheBackend(BaseBackend):
                     'ratelimited_by': ratelimited_by,
                     'period': period,
                     'field': field,
-                    'count': counters[counter],
+                    'count': current_count,
                     'cache_key': counter,
                     'ip': self.get_ip(request)
                 })
