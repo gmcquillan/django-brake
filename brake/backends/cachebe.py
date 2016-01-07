@@ -8,7 +8,6 @@ from brake.backends import BaseBackend
 
 
 CACHE_PREFIX = 'rl:'
-BASE_CACHE = BaseCache({})
 IP_PREFIX = 'ip:'
 KEY_TEMPLATE = 'func:%s:%s%s:%s%s'
 PERIOD_PREFIX = 'period:'
@@ -47,7 +46,7 @@ class CacheBackend(BaseBackend):
                     ))
 
         return [
-            BASE_CACHE.make_key(CACHE_PREFIX + k) for k in keys
+            CACHE_PREFIX + k for k in keys
         ]
 
     def count(self, func_name, request, ip=True, field=None, period=60):
@@ -61,9 +60,9 @@ class CacheBackend(BaseBackend):
                 count, expiration = value
             else:
                 count = value
-                expiration = time.time()
+                expiration = time.time() + period
             count += 1
-            cache.set(key, (count, expiration), timeout=expiration - time.time())
+            cache.set(key, (count, expiration), timeout=(expiration - time.time()))
 
     def limit(self, func_name, request,
             ip=True, field=None, count=5, period=None):

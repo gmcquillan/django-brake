@@ -55,9 +55,9 @@ class RateLimitTestCase(unittest.TestCase):
 
         cls.PERIODS = (60, 3600, 86400)
         # Setup the keys used for the ip-specific counters.
-        cls.IP_TEMPLATE = ':1:rl:func:%s:period:%d:ip:127.0.0.1'
+        cls.IP_TEMPLATE = 'rl:func:%s:period:%d:ip:127.0.0.1'
         # Keys using this template are for form field-specific counters.
-        cls.FIELD_TEMPLATE = ':1:rl:func:%s:period:%s:field:username:%s'
+        cls.FIELD_TEMPLATE = 'rl:func:%s:period:%s:field:username:%s'
         # Sha1 hash of 'user' used in rate limit related tests:
         cls.USERNAME_SHA1_DIGEST = 'efe049ccead779e455e93893366c119d44ddd8b5'
         cls.KEYS = MockRLKeys()
@@ -78,6 +78,14 @@ class RateLimitTestCase(unittest.TestCase):
                     '%s_ip_%d' % (function, period),
                     cls.IP_TEMPLATE % (function, period)
                 )
+        cls.FAKE_LOGIN_CACHE_KEYS = [
+            cls.KEYS.fake_login_field_60,
+            cls.KEYS.fake_login_field_3600,
+            cls.KEYS.fake_login_field_86400,
+            cls.KEYS.fake_login_ip_60,
+            cls.KEYS.fake_login_ip_3600,
+            cls.KEYS.fake_login_ip_86400,
+        ]
 
     def _make_rl_key(self, func_name, period, field_hash):
         """Makes a ratelimit-style memcached key."""
@@ -144,6 +152,7 @@ def fake_login_use_request_path(request):
     """Used to test use_request_path=True"""
     return HttpResponse()
 
+
 class TestRateLimiting(RateLimitTestCase):
 
     def setUp(self):
@@ -162,21 +171,27 @@ class TestRateLimiting(RateLimitTestCase):
 
     def test_fake_keys_work(self):
         """Ensure our ability to artificially set keys is accurate."""
-        cache.set(self.KEYS.fake_login_ip_60, (4, time.time() + 120))
-        cache.set(self.KEYS.fake_login_field_60, (4, time.time() + 120))
-        cache.set(self.KEYS.fake_login_ip_3600, (4, time.time() + 120))
-        cache.set(self.KEYS.fake_login_field_3600, (4, time.time() + 120))
-        cache.set(self.KEYS.fake_login_ip_86400, (4, time.time() + 120))
-        cache.set(self.KEYS.fake_login_field_86400, (4, time.time() + 120))
+        for initial_key in self.FAKE_LOGIN_CACHE_KEYS:
+            cache.set(initial_key, (4, time.time() + 120))
 
         self.client.post(fake_login, self.good_payload)
 
-        self.assertEqual(cache.get(self.KEYS.fake_login_ip_60)[0], 5)
-        self.assertEqual(cache.get(self.KEYS.fake_login_field_60)[0], 5)
-        self.assertEqual(cache.get(self.KEYS.fake_login_ip_3600)[0], 5)
-        self.assertEqual(cache.get(self.KEYS.fake_login_field_3600)[0], 5)
-        self.assertEqual(cache.get(self.KEYS.fake_login_ip_86400)[0], 5)
-        self.assertEqual(cache.get(self.KEYS.fake_login_field_86400)[0], 5)
+        for test_key in self.FAKE_LOGIN_CACHE_KEYS:
+            self.assertEqual(cache.get(test_key)[0], 5)
+
+    def test_expiration_ttl_set_correctly(self):
+        """Ensure our cache TTLs are set correctly."""
+        cur_time = int(time.time())
+        self.client.post(fake_login, self.bad_payload)
+
+        for key in self.FAKE_LOGIN_CACHE_KEYS:
+            # We have to use the default prefix that django cache puts on keys
+            # because we are reaching into the implementation of our LocMemCache
+            # implementation.
+            test_ttl = int(cache._expire_info.get(':1:' + key, 0))
+            expected_ttl = int(key.split(':')[4]) + cur_time
+            # within a second
+            self.assertAlmostEqual(test_ttl, expected_ttl, delta=1)
 
     def test_ratelimit_by_ip_one_minute(self):
         """Block requests after 1 minute limit is exceeded."""
@@ -290,14 +305,6 @@ class TestRateLimiting(RateLimitTestCase):
         self.assertFalse(self.client.post(fake_login, self.bad_payload))
         # These are the cache keys that are specified by the decorator
         # for this view.
-        fake_login_cache_keys = [
-                self.KEYS.fake_login_field_60,
-                self.KEYS.fake_login_field_3600,
-                self.KEYS.fake_login_field_86400,
-                self.KEYS.fake_login_ip_60,
-                self.KEYS.fake_login_ip_3600,
-                self.KEYS.fake_login_ip_86400,
-        ]
-        for key in fake_login_cache_keys:
+        for key in self.FAKE_LOGIN_CACHE_KEYS:
             self.assertTrue(cache.get(key) > 1)
 
