@@ -1,4 +1,5 @@
 import hashlib
+import time
 
 from django.core.cache import cache
 from django.core.cache.backends.base import BaseCache
@@ -7,7 +8,6 @@ from brake.backends import BaseBackend
 
 
 CACHE_PREFIX = 'rl:'
-BASE_CACHE = BaseCache({})
 IP_PREFIX = 'ip:'
 KEY_TEMPLATE = 'func:%s:%s%s:%s%s'
 PERIOD_PREFIX = 'period:'
@@ -46,30 +46,23 @@ class CacheBackend(BaseBackend):
                     ))
 
         return [
-            BASE_CACHE.make_key(CACHE_PREFIX + k) for k in keys
+            CACHE_PREFIX + k for k in keys
         ]
 
     def count(self, func_name, request, ip=True, field=None, period=60):
         """Increment counters for all relevant cache_keys given a request."""
-        cache_keys = self._keys(func_name, request, ip, field, period)
-        counters = dict((key, 1) for key in cache_keys)
-        counters_read = cache.get_many(cache_keys)
-        for key, value in counters_read.items():
-            #Handle old values.
+        counters = dict((key, (1, time.time() + period)) for key in self._keys(
+            func_name, request, ip, field, period))
+        counters.update(cache.get_many(counters.keys()))
+        for key, value in counters.items():
+            # Handle old values.
             if isinstance(value, tuple):
-                count, _ = value # Futureproofing for expiration values.
+                count, expiration = value
             else:
                 count = value
-
+                expiration = time.time() + period
             count += 1
-
-            # These changes come from:
-            # https://github.com/gmcquillan/django-brake/pull/21
-            # However, to future proof them, we accept the new values, but
-            # continue to write the old-style values as part of an upgrade path.
-            counters[key] = count
-
-        cache.set_many(counters, timeout=period)
+            cache.set(key, (count, expiration), timeout=(expiration - time.time()))
 
     def limit(self, func_name, request,
             ip=True, field=None, count=5, period=None):
@@ -87,6 +80,7 @@ class CacheBackend(BaseBackend):
             current_count = counters[counter]
             if isinstance(current_count, tuple):
                 current_count = current_count[0]
+
             if current_count > count:
                 limits.append({
                     'ratelimited_by': ratelimited_by,

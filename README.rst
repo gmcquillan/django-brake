@@ -22,6 +22,20 @@ This is a fork of Django Ratelimit, to support:
 
 The intention is to remain API compliant with Django Ratelimit.
 
+NOTICE - UPGRADES
+=================
+
+If you are upgrading from a version prior to 1.4.1, please upgrade to that version first,
+then upgrade to the latest version. There has been a serialization change for
+cached count values so that expirations are more precise.
+
+To upgrade from any version prior to 1.4.X:
+
+- First upgrade to 1.4.1. It's backwards compatible with all previous versions, but won't cause a service interruption while you're deploying the latest version of django-brake. ``pip install django-brake==1.4.1``
+
+- After this is fully deployed to all your webservers, then you can safely deploy the latest: ``pip install -U django-brake``
+
+
 Using Django Brake
 ==================
 
