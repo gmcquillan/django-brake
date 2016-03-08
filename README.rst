@@ -184,7 +184,7 @@ Implementation Details:
 Some Required Customization
 ---------------------------
 
-By default we only track the IP that we get form
+By default we only track the IP that we get from
 request.META['HOST_ADDR']. Unless your webservers are sitting directly
 on routable IPs and have no loadbalancers or upstream proxies,
 this is probably not what you want!
