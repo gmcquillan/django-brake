@@ -1,4 +1,4 @@
-from decorators import _backend
+from brake.decorators import _backend
 
 """Access limits and increment counts without using a decorator."""
 
