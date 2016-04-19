@@ -62,7 +62,7 @@ class CacheBackend(BaseBackend):
                 count = value
                 expiration = time.time() + period
             count += 1
-            cache.set(key, (count, expiration), timeout=(expiration - time.time()))
+            cache.set(key, (count, expiration), timeout=int(expiration - time.time()))
 
     def limit(self, func_name, request,
             ip=True, field=None, count=5, period=None):
