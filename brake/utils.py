@@ -2,7 +2,7 @@ from brake.decorators import _backend
 
 """Access limits and increment counts without using a decorator."""
 
-def get_limits(request, label, field, periods):
+def get_limits(request, label, field, periods, increment=1):
     limits = []
     count = 10
     for period in periods:
@@ -13,7 +13,7 @@ def get_limits(request, label, field, periods):
             count=count,
             period=period
         ))
-        count += 10
+        count += increment
 
     return limits
 
