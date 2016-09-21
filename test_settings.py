@@ -29,6 +29,9 @@ ROOT_URLCONF = 'test_settings'
 SECRET_KEY = 'HAHAHA ratelimits!'
 
 # turn this file into a pseudo-urls.py.
-from django.conf.urls import patterns
+try:
+    from django.conf.urls import patterns
+    urlpatterns = patterns('',)
+except ImportError:
+    urlpatterns = []
 
-urlpatterns = patterns('',)
