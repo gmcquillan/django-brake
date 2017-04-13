@@ -306,5 +306,5 @@ class TestRateLimiting(RateLimitTestCase):
         # These are the cache keys that are specified by the decorator
         # for this view.
         for key in self.FAKE_LOGIN_CACHE_KEYS:
-            self.assertTrue(cache.get(key) > 1)
+            self.assertTrue(cache.get(key)[0] > 1)
 
