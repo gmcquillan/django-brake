@@ -1,5 +1,5 @@
 ================
-Django Brake
+Django Brake - Not Actively Maintained
 ================
 
 .. image:: https://secure.travis-ci.org/gmcquillan/django-brake.png?branch=master
