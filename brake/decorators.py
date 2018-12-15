@@ -42,14 +42,6 @@ def get_class_by_path(path):
 
     return mod
 
-# Allows you to override the CacheBackend in your settings.py
-_backend_class = getattr(
-    settings,
-    'RATELIMIT_CACHE_BACKEND',
-    'brake.backends.cachebe.CacheBackend'
-)
-_backend = get_class_by_path(_backend_class)()
-
 
 def ratelimit(
     ip=True, use_request_path=False, block=False, method=None, field=None, rate='5/m', increment=None
@@ -59,6 +51,14 @@ def ratelimit(
 
         @wraps(fn)
         def _wrapped(request, *args, **kw):
+            # Allows you to override the CacheBackend in your settings.py
+            _backend_class = getattr(
+                settings,
+                'RATELIMIT_CACHE_BACKEND',
+                'brake.backends.cachebe.CacheBackend'
+            )
+            _backend = get_class_by_path(_backend_class)()
+
             if use_request_path:
                 func_name = request.path
             else:
