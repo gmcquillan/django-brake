@@ -61,8 +61,10 @@ def ratelimit(
 
             if use_request_path:
                 func_name = request.path
-            else:
+            elif hasattr(fn, '__name__'):
                 func_name = fn.__name__
+            else:
+                func_name = fn.func.__name__
             response = None
             if _method_match(request, method):
                 limits = _backend.limit(
