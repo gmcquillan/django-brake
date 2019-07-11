@@ -6,7 +6,7 @@ setup(
     name='django-brake',
     version='.'.join(map(str, VERSION)),
     description='Cache-based rate-limiting for Django.',
-    long_description=open('README.rst').read(),
+    long_description='Cache-based rate-limiting for Django. See README.',
     author='James Socol, Gavin McQuillan',
     author_email='james@mozilla.com, gavin@urbanairship.com',
     url='http://github.com/gmcquillan/django-brake',
